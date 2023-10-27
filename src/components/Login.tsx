@@ -1,47 +1,85 @@
-import { Form, Button } from "react-bootstrap";
-import { useAuth } from "../hooks/useAuth"; // Import your authentication hook as needed
+import { Form, Button, InputGroup } from "react-bootstrap";
+import { useAuth } from "../hooks/useAuth";
+import { Formik, FormikHelpers } from "formik";
+import * as Yup from "yup";
 
-type Props = {};
+type Values = {
+   username: string;
+   password: string;
+};
 
-export default function Login({}: Props) {
-   const { login } = useAuth; // Assuming you have a login function from your authentication hook
+export default function Register() {
+   const { login } = useAuth();
 
-   function loginUser(event: React.FormEvent<HTMLFormElement>): void {
-      event.preventDefault();
+   const validationSchema = Yup.object().shape({
+      username: Yup.string().required(),
+      password: Yup.string().required(),
+   });
 
-      const email = (event.target as HTMLFormElement).elements.namedItem(
-         "formBasicEmail"
-      ) as HTMLInputElement;
-      const password = (event.target as HTMLFormElement).elements.namedItem(
-         "formBasicPassword"
-      ) as HTMLInputElement;
+   const initialValues: Values = {
+      username: "",
+      password: "",
+   };
 
-      login(email.value, password.value); // Assuming you have a login function that takes user credentials
-      location.reload();
-   }
+   const handleSubmit = async (
+      { username, password }: Values,
+      { setStatus }: FormikHelpers<Values>
+   ) => {
+      try {
+         await login(username, password);
+      } catch (err: any) {
+         if (err.response?.status === 401) {
+            setStatus(err.response.data.message);
+         }
+      }
+   };
 
    return (
-      <Form onSubmit={loginUser}>
-         <Form.Group className="mb-3" controlId="formBasicEmail">
-            <Form.Label>Email address</Form.Label>
-            <Form.Control
-               type="email"
-               placeholder="Enter email"
-               autoComplete="username"
-            />
-         </Form.Group>
+      <Formik
+         validationSchema={validationSchema}
+         initialValues={initialValues}
+         onSubmit={handleSubmit}
+      >
+         {({ handleSubmit, handleChange, values, touched, errors, status }) => (
+            <Form noValidate onSubmit={handleSubmit}>
+               <Form.Group>
+                  <Form.Label>Username</Form.Label>
+                  <InputGroup>
+                     <InputGroup.Text>#</InputGroup.Text>
+                     <Form.Control
+                        type="text"
+                        name="username"
+                        onChange={handleChange}
+                        value={values.username}
+                        placeholder="Username"
+                        isInvalid={touched.username && !!errors.username}
+                     />
+                     <Form.Control.Feedback type="invalid">
+                        {errors.username}
+                     </Form.Control.Feedback>
+                  </InputGroup>
+               </Form.Group>
 
-         <Form.Group className="mb-3" controlId="formBasicPassword">
-            <Form.Label>Password</Form.Label>
-            <Form.Control
-               type="password"
-               placeholder="Password"
-               autoComplete="current-password"
-            />
-         </Form.Group>
-         <Button variant="primary" type="submit">
-            Login
-         </Button>
-      </Form>
+               <Form.Group>
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control
+                     type="password"
+                     name="password"
+                     onChange={handleChange}
+                     value={values.password}
+                     placeholder="Password"
+                     isInvalid={touched.password && !!errors.password}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                     {errors.password}
+                  </Form.Control.Feedback>
+               </Form.Group>
+               <div className="text-danger">{status}</div>
+
+               <br />
+               <Button type="submit">Submit form</Button>
+            </Form>
+         )}
+      </Formik>
    );
 }

@@ -9,7 +9,7 @@ export default function AuthModal() {
    const switcher = () => setHasAccount(!hasAccount);
 
    return (
-      <Modal show={true} backdrop="static" centered contentClassName="bg-light">
+      <Modal show={true} backdrop="static" centered className="z-2" backdropClassName="z-2" contentClassName="bg-light">
          <Modal.Header>
             <Modal.Title>{hasAccount ? "Login" : "Register"}</Modal.Title>
          </Modal.Header>
